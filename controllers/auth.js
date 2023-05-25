@@ -1,52 +1,64 @@
 const auth = require("express").Router();
+const { getUserByEmail, verifyPassword, createUser, updateUser, deleteUser } = require("../services/user");
 
-auth.post("/signin", (req, res) => {
-  const {email, password} = req.body;
-  if (!email) return res.status(401).json({error: "errorCodes.EMAIL_EMPTY"});
-  if (!password)
-    return res.status(401).json({error: "errorCodes.PASSWORD_EMPTY"});
-  passport.authenticate("localv1", {session: false}, async function (
-    error,
-    userObj
-  ) {
-    try {
-      await models.sequelize.transaction(async () => {
-        if (error) {
-          if (error.code === errorCodes.USER_LOGIN_LOCKED.code) {
-            return res
-              .status(401)
-              .json({error, lockPeriodInMins: accountLockDurationInMins});
-          }
-          if (error.code === errorCodes.USER_NOT_PRESENT.code) {
-            return res.status(401).json({error});
-          }
-        }
-        if (!userObj) {
-          var user = await getUserByEmail({email});
-          const updatedUserObj = await updateFailedLoginAttempt(user);
-          return res.status(401).json({
-            error: errorCodes.INVALIDPASSWORD,
-            failedAttempts: updatedUserObj.failedLoginCount,
-            totalAttempts: accountLockMaxAttempts,
-            lockPeriodInMins: accountLockDurationInMins
-          });
-        }
+auth.post("/register", async (req, res) => {
+  try {
+    if(!req.body.email) return res.status(401).json({error: "Please provide an email address."});
+    if(!req.body.password) return res.status(401).json({error: "Please provide a password."});
 
-        const UserObjUnlocked = await clearAccountFailedLoginLock(userObj);
-        const signedUser = await createUserSession(
-          req,
-          UserObjUnlocked.id,
-          UserObjUnlocked.email,
-          UserObjUnlocked.UserType.type,
-          false,
-          false
-        );
-        logger.debug("signedUser1: " + JSON.stringify(signedUser));
-        return res.status(200).json({...toSession(JSON.stringify(signedUser))});
-      });
-    } catch (error) {
-      logger.error(`Controller - auth: /signin : `, error);
-      return res.status(401).json({error});
-    }
-  })(req, res);
+    const userObj = await createUser(req.body);
+    if(!userObj.id) return res.status(401).json({error: "There was an error please try again"});
+    return res.status(200).json({userObj});
+  } catch (error) {
+    console.log(`Register: ${error}`);
+    res.status(401).json(error);
+  }
 });
+
+auth.post("/signin", async (req, res) => {
+  const {email, password} = req.body;
+  if (!email) return res.status(401).json({error: "EMAIL_EMPTY"});
+  if (!password)
+    return res.status(401).json({error: "PASSWORD_EMPTY"});
+  
+  try {
+    // logger.debug("Login with email", username);
+    const userObj = await getUserByEmail({email: email});
+    if (!userObj) {
+      return done("USER_NOT_PRESENT", null);
+    }
+    if (verifyPassword(userObj, password)) {
+      await updateUser({active: true}, userObj.userId);
+      return res.status(200).json({userObj});
+    } else {
+      return res.status(401).json({error: "INVALIDPASSWORD"});
+    }
+  } catch (error) {
+    console.log("Login: ", error);
+    return res.status(401).json({error});
+  }
+});
+
+auth.put("/signout", async (req, res) => {
+  try {
+    const userObj = await updateUser({active: false}, req.body.userId);
+    if(!userObj) return res.status(401).json("User not found");
+    return res.status(200).json(`User with email ${userObj.email} signed out.`);
+  } catch (error) {
+    console.log("Logout: ", error);
+    return res.status(401).json({error});
+  }
+});
+
+auth.delete("/delete", async (req, res) => {
+  try {
+    const userObj = await deleteUser(req.body.userId);
+    if(!userObj) return res.status(401).json("User not found");
+    return res.status(200).json(`User with email ${userObj.email} deleted.`);
+  } catch (error) {
+    console.log("Delete: ", error);
+    return res.status(401).json({error});
+  }
+})
+
+module.exports = auth;
