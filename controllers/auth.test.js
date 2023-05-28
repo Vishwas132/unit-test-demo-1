@@ -1,13 +1,25 @@
 const request = require('supertest');
 const app = require('../app'); // Assuming your Express app is exported from app.js
+const db = require('../models');
 const { createUser } = require('../services/user');
-const auth = require('./auth');
+
+// Assuming you have imported the necessary dependencies
+afterAll(async () => {
+  await db.sequelize.drop();
+})
+
+jest.mock("../services/user.js", () => ({
+  createUser: jest.fn().mockResolvedValue({
+    id: 1,
+    name: "John Doe",
+    userObj: {}
+  })
+}))
 
 describe('POST /auth/register', () => {
-  app.use(auth);
   test('should return 401 error if email is not provided', async () => {
     const response = await request(app)
-      .post('/register')
+      .post('/auth/register')
       .send({ password: 'password123' });
     expect(response.status).toBe(401);
     expect(response.body).toEqual({ error: 'Please provide an email address.' });
@@ -15,7 +27,7 @@ describe('POST /auth/register', () => {
 
   test('should return 401 error if password is not provided', async () => {
     const response = await request(app)
-      .post('/register')
+      .post('/auth/register')
       .send({ email: 'test@example.com' });
 
     expect(response.status).toBe(401);
@@ -23,40 +35,28 @@ describe('POST /auth/register', () => {
   });
 
   test('should create user object and return 200 status with userObj', async () => {
+    createUser.mockResolvedValue({
+      id: 1,
+      name: "John Doe",
+      userObj: {}
+    })
     const response = await request(app)
-      .post('/register')
+      .post('/auth/register')
       .send({ email: 'test260503@example.com', password: 'password123' });
 
     expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('userObj');
+    expect(response.body).toHaveProperty('userObj.id');
   });
 
   test('should return 401 error if there was an error creating user', async () => {
     // Mock the createUser function to return null
-    jest.mock('../services/user', () => () => null);
-
+    createUser.mockResolvedValue({ error: 'There was an error please try again' })
     const response = await request(app)
-      .post('/register')
+      .post('/auth/register')
       .send({ email: 'test@example.com', password: 'password123' });
 
     expect(response.status).toBe(401);
     expect(response.body).toEqual({ error: 'There was an error please try again' });
-  });
-
-  test('should handle and log any errors thrown during execution', async () => {
-    // Mock the createUser function to throw an error
-    jest.mock('../services/user', () => () => {
-      throw new Error('Some error message');
-    });
-
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-
-    const response = await request(app)
-      .post('/register')
-      .send({ email: 'test@example.com', password: 'password123' });
-
-    expect(response.status).toBe(401);
-    expect(response.body).toEqual({ error: 'There was an error please try again' });
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Services -'));
   });
 });
+

@@ -7,11 +7,11 @@
     "dialect": "postgres"
   },
   "test": {
-    "username": "sqlite::memory",
-    "password": "",
-    "database": "unit-test-demo",
+    "username": "postgres",
+    "password": "postgres",
+    "database": "unit-test-demo-2",
     "host": "127.0.0.1",
-    "dialect": "sqlite"
+    "dialect": "postgres"
   },
   "production": {
     "username": "root",

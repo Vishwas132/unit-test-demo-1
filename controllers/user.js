@@ -1,7 +1,7 @@
-const auth = require("router")();
+const user = require("router")();
 const { getUserByEmail, verifyPassword, createUser, updateUser, deleteUser } = require("../services/user");
 
-auth.post("/register", async (req, res) => {
+user.post("/register", async (req, res) => {
   try {
     if(!req.body.email) return res.status(401).json({error: "Please provide an email address."});
     if(!req.body.password) return res.status(401).json({error: "Please provide a password."});
@@ -15,11 +15,7 @@ auth.post("/register", async (req, res) => {
   }
 });
 
-auth.post("/signin", (req, res, next) => {
-  console.log("middleware");
-  next();
-},
- async (req, res) => {
+user.post("/signin", async (req, res) => {
   const {email, password} = req.body;
   if (!email) return res.status(401).json({error: "EMAIL_EMPTY"});
   if (!password)
@@ -43,7 +39,7 @@ auth.post("/signin", (req, res, next) => {
   }
 });
 
-auth.put("/signout", async (req, res) => {
+user.put("/signout", async (req, res) => {
   try {
     const userObj = await updateUser({active: false}, req.body.userId);
     if(!userObj) return res.status(401).json("User not found");
@@ -54,7 +50,7 @@ auth.put("/signout", async (req, res) => {
   }
 });
 
-auth.delete("/delete", async (req, res) => {
+user.delete("/delete", async (req, res) => {
   try {
     const userObj = await deleteUser(req.body.userId);
     if(!userObj) return res.status(401).json("User not found");
@@ -65,4 +61,4 @@ auth.delete("/delete", async (req, res) => {
   }
 })
 
-module.exports = auth;
+module.exports = user;

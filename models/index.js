@@ -6,8 +6,7 @@ const Sequelize = require('sequelize').Sequelize;
 const process = require('process');
 const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || 'development';
-const config = require('../config/config.json')["test"];
-console.log("config", config);
+let config = require("../config/config.json")[env];
 const db = {};
 
 const {createNamespace} = require("cls-hooked");

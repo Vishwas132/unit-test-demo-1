@@ -1,1 +1,0 @@
- pg_dump --schema-only --no-owner --no-acl --disable-triggers --no-comments --no-publications --no-security-labels --no-subscriptions --no-tablespaces --host 127.0.0.1 --user sqlite::memory --password "" unit-test-demo > dump.sql
