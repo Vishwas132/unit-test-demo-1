@@ -1,6 +1,6 @@
 const request = require('supertest');
-const app = require('../app'); // Assuming your Express app is exported from app.js
-const db = require('../models');
+const app = require('../../app'); // Assuming your Express app is exported from app.js
+const db = require('../../models');
 // const { createUser } = require('../services/user');
 
 // Assuming you have imported the necessary dependencies
