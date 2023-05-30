@@ -4,8 +4,10 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "test": "SET PGPASSWORD=postgres&& psql -U postgres -a -f createdb.sql && psql -U postgres unit-test-demo-2 < dump.sql && SET NODE_ENV=test&& jest --detectOpenHandles",
-    "start": "SET NODE_ENV=development&& node server"
+    "test": "SET NODE_ENV=test&& jest --detectOpenHandles",
+    "start": "SET NODE_ENV=development&& node server",
+    "create_dump": "pg_dump --schema-only --no-owner --no-acl --disable-triggers --no-comments --no-publications --no-security-labels --no-subscriptions --no-tablespaces --host 127.0.0.1 --username postgres unit-test-demo > dump.sql",
+    "create_test_db": "psql -U postgres -a -f createdb.sql && psql -U postgres unit-test-demo-2 < dump.sql && SET NODE_ENV=test&& node server"
   },
   "repository": {
     "type": "git",

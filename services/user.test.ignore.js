@@ -1,5 +1,5 @@
 // Import the createUser function
-const { createUser } = require('../services/user');
+const { createUser } = require('./user');
 const { User } = require("../models");
 const db = require('../models');
 
