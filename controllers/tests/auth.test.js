@@ -1,11 +1,18 @@
 const request = require('supertest');
 const app = require('../../app'); // Assuming your Express app is exported from app.js
 const db = require('../../models');
+const { deleteUser } = require('../../services/user');
 // const { createUser } = require('../services/user');
+
+const userAuth = {
+  email: "test@example.com",
+  password: "password123"
+}
 
 // Assuming you have imported the necessary dependencies
 afterAll(async () => {
-  await db.sequelize.truncate();
+  // await db.sequelize.truncate();
+  deleteUser(userAuth.email);
 })
 
 // jest.mock("../services/user.js", () => ({
@@ -17,24 +24,24 @@ afterAll(async () => {
 // }))
 
 describe('POST /auth/register', () => {
-  test('should return 401 error if email is not provided', async () => {
+  it('should return 401 error if email is not provided', async () => {
     const response = await request(app)
       .post('/auth/register')
-      .send({ password: 'password123' });
+      .send({ password: userAuth.password });
     expect(response.status).toBe(401);
     expect(response.body).toEqual({ error: 'Please provide an email address.' });
   });
 
-  test('should return 401 error if password is not provided', async () => {
+  it('should return 401 error if password is not provided', async () => {
     const response = await request(app)
       .post('/auth/register')
-      .send({ email: 'test@example.com' });
+      .send({ email: userAuth.email });
 
     expect(response.status).toBe(401);
     expect(response.body).toEqual({ error: 'Please provide a password.' });
   });
 
-  test('should create user object and return 200 status with userObj', async () => {
+  it('should create user object and return 200 status with userObj', async () => {
     // createUser.mockResolvedValue({
     //   id: 1,
     //   name: "John Doe",
@@ -42,18 +49,18 @@ describe('POST /auth/register', () => {
     // })
     const response = await request(app)
       .post('/auth/register')
-      .send({ email: 'test@example.com', password: 'password123' });
+      .send({ email: userAuth.email, password: userAuth.password });
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('userObj.id');
   });
 
-  test('should return 401 error if there was an error creating user', async () => {
+  it('should return 401 error if there was an error creating user', async () => {
     // Mock the createUser function to return null
     // createUser.mockResolvedValue({ error: 'There was an error please try again' })
     const response = await request(app)
       .post('/auth/register')
-      .send({ email: 'test@example.com', password: 'password123' });
+      .send({ email: userAuth.email, password: userAuth.password });
 
     expect(response.status).toBe(401);
     expect(response.body).toEqual({ error: 'There was an error please try again' });

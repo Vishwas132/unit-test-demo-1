@@ -46,10 +46,10 @@ const verifyPassword = async () => {
   }
 }
 
-const deleteUser = async (userId) => {
+const deleteUser = async (email) => {
   try {
     return await User.destroy({
-      where: {userId}
+      where: {email}
     })
   } catch (error) {
     console.log(`Services - user: deleteUser() for - ${email} : ` + error);
